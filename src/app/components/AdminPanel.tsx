@@ -21,6 +21,8 @@ export function AdminPanel({ api, adminId, currentUser, currentBalance, currentS
   const [searchQuery, setSearchQuery] = useState('');
   const [amountFilter, setAmountFilter] = useState('');
   const [loading, setLoading] = useState(true);
+  const [nextCrashInput, setNextCrashInput] = useState('');
+  const [crashStatus, setCrashStatus] = useState('');
 
   // Load users from API
   const loadUsers = async () => {
@@ -254,13 +256,53 @@ export function AdminPanel({ api, adminId, currentUser, currentBalance, currentS
         </div>
       )}
 
-      {/* Rounds Tab (Mock) */}
+      {/* Rounds Tab */}
       {activeTab === 'rounds' && (
         <div className="flex flex-col gap-4 fade-in">
-          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl shadow-lg flex flex-col gap-3 items-center justify-center py-10">
-            <Gamepad2 size={48} className="text-slate-600 mb-2" />
-            <h3 className="text-slate-400 font-bold">Управление раундами</h3>
-            <p className="text-sm text-slate-500 text-center">Эта функция будет доступна после настройки WebSocket для синхронизации мультиплеера.</p>
+          <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl shadow-lg flex flex-col gap-4 items-center justify-center py-8">
+            <Gamepad2 size={40} className="text-slate-400 mb-1" />
+            <h3 className="text-white font-bold text-lg">Управление крашем</h3>
+            <p className="text-sm text-slate-400 text-center mb-2">Укажите коэффициент (X), на котором гарантированно завершится следующий раунд. Работает только на 1 следующий вылет.</p>
+            
+            <div className="w-full max-w-xs flex flex-col gap-3">
+              <div className="flex bg-slate-800 rounded-xl overflow-hidden border border-slate-700">
+                <input 
+                  type="number" 
+                  step="0.01"
+                  min="1.00"
+                  placeholder="Например: 2.50" 
+                  value={nextCrashInput} 
+                  onChange={e => setNextCrashInput(e.target.value)} 
+                  className="bg-transparent p-3 text-white focus:outline-none w-full"
+                />
+                <div className="flex items-center justify-center px-4 bg-slate-800 text-slate-500 font-bold border-l border-slate-700">
+                  X
+                </div>
+              </div>
+              
+              <Button 
+                onClick={async () => {
+                  if (!nextCrashInput || isNaN(Number(nextCrashInput))) return;
+                  setCrashStatus('Отправка...');
+                  try {
+                    await api.setNextCrash(Number(nextCrashInput));
+                    setCrashStatus(`Успешно! Следующий краш будет на ${Number(nextCrashInput).toFixed(2)}x`);
+                    setNextCrashInput('');
+                  } catch (e) {
+                    setCrashStatus('Ошибка при отправке');
+                  }
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-900/20"
+              >
+                Установить краш
+              </Button>
+
+              {crashStatus && (
+                <div className={`text-center text-sm font-bold p-2 rounded-lg ${crashStatus.includes('Успешно') ? 'bg-green-900/30 text-green-400' : 'bg-slate-800 text-slate-300'}`}>
+                  {crashStatus}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

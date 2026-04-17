@@ -237,4 +237,38 @@ app.get("/make-server-0dc2674a/admin/history", async (c) => {
   }
 });
 
+// Game Control Endpoints
+app.post("/make-server-0dc2674a/admin/next-crash", async (c) => {
+  try {
+    const { multiplier } = await c.req.json();
+    await kv.set('global:next_crash', Number(multiplier));
+    return c.json({ success: true, multiplier });
+  } catch (error) {
+    console.log(`Error setting next crash: ${error}`);
+    return c.json({ error: "Failed to set next crash" }, 500);
+  }
+});
+
+app.get("/make-server-0dc2674a/game/crash-point", async (c) => {
+  try {
+    // Check if admin has set a forced crash point
+    const forcedCrash = await kv.get('global:next_crash');
+    if (forcedCrash) {
+      // Clear it after using it once
+      await kv.del('global:next_crash');
+      return c.json({ crashPoint: Number(forcedCrash), forced: true });
+    }
+    
+    // Otherwise, generate normal random crash point
+    const e = 100 / (100 - Math.random() * 100);
+    const result = Math.max(1.00, Math.floor(e * 100) / 100);
+    const crashPoint = result > 1000 ? 1000 : result;
+    
+    return c.json({ crashPoint, forced: false });
+  } catch (error) {
+    console.log(`Error getting crash point: ${error}`);
+    return c.json({ error: "Failed to get crash point" }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

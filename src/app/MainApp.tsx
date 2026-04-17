@@ -115,12 +115,23 @@ export function MainApp() {
       }, 100);
     };
 
-    const startFlying = () => {
+    const startFlying = async () => {
       if (!isSubscribed) return;
       setCrashGameState('in-progress');
-      let currentMult = 1.00;
-      const crashPoint = 1.0 + Math.random() * 4.0; 
+      
+      let crashPoint = 1.0 + Math.random() * 4.0; 
+      try {
+        const res = await api.getCrashPoint();
+        if (res && res.crashPoint) {
+          crashPoint = res.crashPoint;
+        }
+      } catch(e) {
+        console.error('Failed to fetch real crash point', e);
+      }
+      
+      if (!isSubscribed) return;
 
+      let currentMult = 1.00;
       intervalId = setInterval(() => {
         currentMult += 0.01 + (currentMult * 0.005);
         if (currentMult >= crashPoint) {

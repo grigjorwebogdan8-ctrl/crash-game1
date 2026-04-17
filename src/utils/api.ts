@@ -113,4 +113,17 @@ export const api = {
     // This is a stub - withdraw functionality is not implemented as per requirements
     return { success: false };
   },
+
+  // Set next crash point (admin)
+  setNextCrash: async (multiplier: number): Promise<{ success: boolean }> => {
+    return apiCall(`/admin/next-crash`, {
+      method: 'POST',
+      body: JSON.stringify({ multiplier }),
+    });
+  },
+
+  // Get current game crash point
+  getCrashPoint: async (): Promise<{ crashPoint: number, forced: boolean }> => {
+    return apiCall(`/game/crash-point`);
+  },
 };
