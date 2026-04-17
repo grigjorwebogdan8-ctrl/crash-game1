@@ -32,7 +32,10 @@ export function AdminPanel({ api, adminId, currentUser, currentBalance, currentS
 
       const formattedUsers = apiUsers.map((u: any) => ({
         id: parseInt(u.userId),
-        username: u.userId, 
+        username: u.profile?.username || u.profile?.first_name || String(u.userId),
+        first_name: u.profile?.first_name,
+        joined_at: u.profile?.joined_at,
+        last_seen: u.profile?.last_seen,
         balance: u.balance || 0,
         games: u.stats?.games || 0,
         totalBet: u.stats?.totalBet || 0,
@@ -46,6 +49,9 @@ export function AdminPanel({ api, adminId, currentUser, currentBalance, currentS
           formattedUsers.unshift({
             id: currentUser.id,
             username: currentUser.username || currentUser.first_name || 'Игрок',
+            first_name: currentUser.first_name,
+            joined_at: new Date().toISOString(),
+            last_seen: new Date().toISOString(),
             balance: currentBalance || 0,
             games: currentStats?.games || 0,
             totalBet: currentStats?.totalBet || 0,
@@ -175,7 +181,17 @@ export function AdminPanel({ api, adminId, currentUser, currentBalance, currentS
                       {u.username}
                       {u.blocked && <span className="px-2 py-0.5 rounded text-[10px] bg-red-900/50 text-red-500 uppercase">Заблокирован</span>}
                     </span>
-                    <span className="text-xs font-mono text-slate-500 mt-1">ID: {u.id}</span>
+                    <span className="text-xs font-mono text-slate-500 mt-1">ID: {u.id} {u.first_name ? `| Имя: ${u.first_name}` : ''}</span>
+                    {u.joined_at && (
+                      <span className="text-[10px] text-slate-600 mt-1">
+                        Зарегистрирован: {new Date(u.joined_at).toLocaleString()}
+                      </span>
+                    )}
+                    {u.last_seen && (
+                      <span className="text-[10px] text-slate-600 mt-0.5">
+                        Был(а) в сети: {new Date(u.last_seen).toLocaleString()}
+                      </span>
+                    )}
                   </div>
                   <div className="text-right flex flex-col items-end">
                     <span className="text-xs text-slate-500 uppercase font-bold">Баланс</span>

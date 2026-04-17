@@ -27,6 +27,14 @@ async function apiCall<T = any>(endpoint: string, options: RequestInit = {}): Pr
 }
 
 export const api = {
+  // Init user
+  userInit: async (userData: any): Promise<{ ok: boolean }> => {
+    return apiCall(`/user-init`, {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  },
+
   // Get user balance
   getBalance: async (userId: string | number): Promise<{ balance: number }> => {
     return apiCall(`/user/${userId}/balance`);

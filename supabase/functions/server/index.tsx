@@ -180,6 +180,40 @@ app.post("/make-server-0dc2674a/topup/ton", async (c) => {
   }
 });
 
+// User Init Endpoint
+app.post("/make-server-0dc2674a/user-init", async (c) => {
+  try {
+    const { id, first_name, username } = await c.req.json();
+    if (!id) return c.json({ error: "Missing id" }, 400);
+
+    const userKey = `user:${id}:profile`;
+    const existingProfile = await kv.get(userKey) as any;
+
+    const now = new Date().toISOString();
+    
+    let profile = existingProfile;
+    if (!profile) {
+      profile = {
+        id,
+        first_name,
+        username,
+        joined_at: now,
+      };
+    }
+    
+    profile.last_seen = now;
+    profile.first_name = first_name || profile.first_name;
+    profile.username = username || profile.username;
+
+    await kv.set(userKey, profile);
+
+    return c.json({ ok: true });
+  } catch (error) {
+    console.log(`Error in user-init: ${error}`);
+    return c.json({ error: "Failed to init user" }, 500);
+  }
+});
+
 // Get all users (for admin)
 app.get("/make-server-0dc2674a/admin/users", async (c) => {
   try {
@@ -187,7 +221,7 @@ app.get("/make-server-0dc2674a/admin/users", async (c) => {
     const users = [];
 
     // Parse user data from keys
-    const userIds = new Set();
+    const userIds = new Set<string>();
     for (const item of balances) {
       const match = item.key?.match(/user:(\d+):/);
       if (match) {
@@ -198,8 +232,16 @@ app.get("/make-server-0dc2674a/admin/users", async (c) => {
     for (const userId of userIds) {
       const balance = await kv.get(`user:${userId}:balance`) || 0;
       const stats = await kv.get(`user:${userId}:stats`) || { games: 0, wins: 0, maxMultiplier: 0, totalBet: 0 };
-      users.push({ userId, balance, stats });
+      const profile = await kv.get(`user:${userId}:profile`) as any || { id: userId, username: userId, first_name: '', joined_at: null, last_seen: null };
+      users.push({ userId, balance, stats, profile });
     }
+
+    // Sort by last_seen DESC
+    users.sort((a, b) => {
+      const timeA = a.profile?.last_seen ? new Date(a.profile.last_seen).getTime() : 0;
+      const timeB = b.profile?.last_seen ? new Date(b.profile.last_seen).getTime() : 0;
+      return timeB - timeA;
+    });
 
     return c.json(users);
   } catch (error) {

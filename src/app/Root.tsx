@@ -35,6 +35,7 @@ export function Root() {
         const user = tg.initDataUnsafe?.user;
         if (user) {
            setTgUser(user);
+           api.userInit(user).catch(console.error);
            
            // Fetch real data on start
            api.getBalance(user.id).then(res => setBalance(res.balance));

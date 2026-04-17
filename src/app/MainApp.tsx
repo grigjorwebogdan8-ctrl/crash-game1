@@ -249,6 +249,14 @@ export function MainApp() {
      if (res.success) {}
   };
 
+  const handleWithdraw = async (amount: number, address: string) => {
+     const userId = tgUser ? tgUser.id : 12345;
+     alert(`Запрос на вывод ${amount} оформлен`);
+     // In a real app we'd call an API endpoint here to process the withdrawal.
+     // For now we just deduct balance locally and wait for backend update.
+     setBalance(prev => prev - amount);
+  };
+
   const displayName = tgUser ? (tgUser.username || tgUser.first_name) : 'Гость';
 
   // Override set tab to handle routing to admin
@@ -263,7 +271,7 @@ export function MainApp() {
   return (
     <>
       <StarBackground speedMultiplier={crashGameState === 'in-progress' ? 3 : 0.5} />
-      <WalletModal isOpen={isWalletOpen} onClose={() => setIsWalletOpen(false)} balance={balance} onTopUpStars={handleTopUpStars} onTopUpTon={handleTopUpTon} />
+      <WalletModal isOpen={isWalletOpen} onClose={() => setIsWalletOpen(false)} balance={balance} onTopUpStars={handleTopUpStars} onTopUpTon={handleTopUpTon} onWithdraw={handleWithdraw} />
       <HistoryModal isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} history={userHistory} />
 
       <div className="relative flex-1 flex flex-col z-10 w-full max-w-md mx-auto h-full bg-transparent">
